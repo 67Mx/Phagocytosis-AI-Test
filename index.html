@@ -101,7 +101,7 @@ for(const o of UP.pf?DISC2:DISC){const x=X+o[0],y=Y+o[1];if(x<0||y<0||x>=fw||y>=
 V.globalCompositeOperation='source-over';V.clearRect(0,0,w,h);V.fillStyle='rgba(5,2,8,.55)';V.fillRect(0,0,w,h);V.fillStyle=E.fillStyle='#000';V.globalCompositeOperation=E.globalCompositeOperation='destination-out';V.fill(P);E.fill(P);F.x.clearRect(0,0,w,h);if(opt.fog){F.x.drawImage(E.canvas,0,0);F.x.drawImage(V.canvas,0,0)}}}
 const isV=(x,y)=>!opt.fog||G.fog.vis[(y/FS|0)*G.fog.fw+(x/FS|0)],isE=(x,y)=>!opt.fog||G.fog.ex[(y/FS|0)*G.fog.fw+(x/FS|0)];
 function step(dt){const g=G;if(!g||g.st=='shop')return;
-if(g.st=='win'){g.wt+=dt;if(g.wt>(g.tut?3:6.3)){if(g.tut)newGame(false);else shop()}return}if(g.st!='play')return;
+if(g.st=='win'){g.wt+=dt;if(g.wt>(g.tut?3:6.3)){shop()}return}if(g.st!='play')return;
 g.t+=dt;g.fr++;if(g.fr%3==0)fogTick();grid();
 if(g.fr%6==1){for(const c of g.camps)c.al=0;for(const a of g.cells)if(!a.tm)for(const c of g.camps)if(!c.al&&(a.x-c.x)**2+(a.y-c.y)**2<(c.R+AI[diff].ag)**2)c.al=1}
 for(const gp of g.groups){gp.t-=dt;if(gp.t<=0){gp.t=R(8,16);gp.tx=Math.max(100,Math.min(g.w-100,gp.tx+R(-600,600)));gp.ty=Math.max(100,Math.min(g.h-100,gp.ty+R(-600,600)))}}
@@ -115,9 +115,9 @@ for(const a of g.cells){if(a.w>0)a.w--;if(!a.tm&&a.mv&&!a.tg){if((a.x-a.px)**2+(
 g.cells=g.cells.filter(a=>!a.dead);grid();for(const x of g.fx)x.t+=dt;g.fx=g.fx.filter(x=>x.t<(x.pj?x.dur:.8));
 if(g.fr%10==0)chk();if(g.t>g.as+20){g.as=g.t;save('auto')}}
 function chk(){const g=G;let e=0,p=0;for(const a of g.cells)if(!a.dead)a.tm?e++:p++;for(const c of g.camps)if(!c.dead)e++;g.ec=e;g.pc=p;g.hl=e<200;
-if(g.st!='play')return;if(e==0){g.st='win';g.wt=0;if(g.tut)scr('Tutorial complete!','Entering Level 1 · Stage 1...',[])}
+if(g.st!='play')return;if(e==0){g.st='win';g.wt=0;if(g.tut)scr('Tutorial complete!','Visiting the shop...',[])}
 else if(p==0&&!g.jobs.length){g.st='lose';scr('All cells lost','The infection has spread...',[]);setTimeout(menu,2200)}}
-function order(wx,wy,q){const s=G.cells.filter(a=>!a.tm&&a.sel);if(!s.length)return;s.sort((a,b)=>(a.x-wx)**2+(a.y-wy)**2-(b.x-wx)**2-(b.y-wy)**2);let pts=[];if(q){const e=s.find(a=>a.rt&&a.mv);if(e)pts=e.rt.pts.slice(e.ri)}pts.push([wx,wy]);const rt={pts};
+function order(wx,wy,q){const s=G.cells.filter(a=>!a.tm&&a.sel);if(!s.length)return;s.sort((a,b)=>(a.x-wx)**2+(a.y-wy)**2-(b.x-wx)**2-(b.y-wy)**2);let pts=[];if(q){const e=s.find(a=>a.rt&&a.mv);if(e)pts=e.rt.pts.slice(e.ri)}pts.push([wx,wy]);if(pts.length>1)G.f.q=1;const rt={pts};
 s.forEach((a,i)=>{const o=sp(i,10.5);a.fo=o;a.rt=rt;a.ri=0;a.tx=Math.max(0,Math.min(G.w,pts[0][0]+o[0]));a.ty=Math.max(0,Math.min(G.h,pts[0][1]+o[1]));a.mv=1;a.tg=null;a.st=0});G.f.mv=1}
 // ---------- UI ----------
 function closeUI(){for(const i of['vm','qb','ci','gw'])$(i).style.display='none'}
@@ -130,7 +130,8 @@ scr('PHAGOCYTOSIS','Destroy the invaders.',[['Play',diffScr],['Options',optScr],
 function diffScr(){scr('Difficulty','Changes enemy AI intelligence',[['Easy',()=>tutScr(0)],['Medium',()=>tutScr(1)],['Hard',()=>tutScr(2)]])}
 function tutScr(d){diff=d;lvl=1;scr('Play the tutorial?','',[['Yes',()=>newGame(true)],['No',()=>newGame(false)]])}
 function optScr(){scr('Options','',[['Fog of war: '+(opt.fog?'On':'Off'),()=>{opt.fog=!opt.fog;optScr()}],['Edge scrolling: '+(opt.edge?'On':'Off'),()=>{opt.edge=!opt.edge;optScr()}],['Back',menu]])}
-function shop(){G.st='shop';const U=[['rg','Ranger: 1 in 5 new cells gets a ranged attack'],['pf','Pathfinder: 2x view distance']];scr('Shop','Level '+lvl+' cleared · Proteins: '+G.prot+' · DNA: '+G.dna,[...U.map(([k,n])=>[UP[k]?n+' ✔':n+' · 250 DNA',()=>{if(!UP[k]&&G.dna>=250){G.dna-=250;UP[k]=1;shop()}},UP[k]||G.dna<250]),['Empty Upgrade Slot',0,1],['Next Level (Level '+(lvl+1)+')',()=>{lvl++;const d=G.dna;newGame(false);G.dna=d}],['Main Menu',menu]])}
+function shop(){G.st='shop';if(G.tut&&!G.f.sh){G.f.sh=1;G.dna=Math.max(G.dna,250)}const U=[['rg','Ranger: 1 in 5 new cells gets a ranged attack'],['pf','Pathfinder: 2x view distance']];
+scr('Shop',G.tut?'Practice shop: DNA from kills buys upgrades. Ranger and Pathfinder cost 250 DNA each (you got 250 to try one). Upgrades reset after the tutorial. DNA: '+G.dna:'Level '+lvl+' cleared · Proteins: '+G.prot+' · DNA: '+G.dna,[...U.map(([k,n])=>[UP[k]?n+' ✔':n+' · 250 DNA',()=>{if(!UP[k]&&G.dna>=250){G.dna-=250;UP[k]=1;shop()}},UP[k]||G.dna<250]),['Empty Upgrade Slot',0,1],G.tut?['Start Level 1',()=>{Object.assign(UP,{pf:0,rg:0});lvl=1;newGame(false)}]:['Next Level (Level '+(lvl+1)+')',()=>{lvl++;const d=G.dna;newGame(false);G.dna=d}],['Main Menu',menu]])}
 function save(k){const g=G;if(!g||g.st!='play')return;try{const cs=g.camps.filter(c=>!c.dead),s=sv();s[k]={ts:Date.now(),up:UP,lv:lvl,tut:g.tut,diff,prot:g.prot,dna:g.dna,cam:g.cam,ex:btoa(String.fromCharCode(...g.fog.ex)),camps:cs.map(c=>[c.x,c.y,c.hp,c.n,c.R,c.maxhp]),groups:g.groups.map(p=>[p.x,p.y,p.tx,p.ty]),veins:g.veins.map(v=>[v.x,v.y,v.a]),
 cells:g.cells.map(a=>[a.x|0,a.y|0,a.tm,a.k,a.hp,a.hid,a.dg||0,cs.indexOf(a.camp),g.groups.indexOf(a.g),a.rv?1:0,a.ox|0,a.oy|0,a.rg?1:0])};localStorage.setItem('phago',JSON.stringify(s))}catch(e){}}
 function load(k){const s=sv()[k];if(!s)return;diff=s.diff;Object.assign(UP,s.up||{});lvl=s.lv||1;init(s.tut);const g=G;g.prot=s.prot;g.dna=s.dna;g.cam=s.cam;g.fog.ex.set(Uint8Array.from(atob(s.ex),c=>c.charCodeAt(0)));{const E=g.fog.e,P=new Path2D(),X=g.fog.ex;for(let i=0;i<X.length;i++)if(X[i]){const x=(i%g.fog.fw+.5)*4,y=(Math.floor(i/g.fog.fw)+.5)*4;P.moveTo(x+3.2,y);P.arc(x,y,3.2,0,6.3)}E.fillStyle='#000';E.globalCompositeOperation='destination-out';E.fill(P);E.globalCompositeOperation='source-over'}
@@ -153,7 +154,7 @@ b.onclick=()=>openQ(v,i?'B':'T',n,x,y);b.onmouseenter=()=>showCI(i?'B':'T',m);b.
 function openQ(v,k,n,x,y){const q=$('qb');q.innerHTML='<span>How many '+n+'s?</span><input id="qi" inputmode="numeric" autocomplete="off"><small id="qm">Numbers and commas only</small><small id="qc"></small><button id="qo">Deliver</button>';q.style.display='flex';q.style.left=Math.min(x+180,W-200)+'px';q.style.top=Math.min(y,H-150)+'px';
 const i=$('qi');i.focus();const u=()=>{const c=+i.value.replace(/,/g,'')||0;$('qc').textContent='Cost: '+c*2+' Proteins · Remaining: '+(G.prot-c*2)};i.oninput=()=>{i.value=i.value.replace(/[^0-9,]/g,'');u()};u();
 const go=()=>{if(!G||G.st!='play'||!G.veins.includes(v)){closeUI();return}const s=i.value;if(!/^[1-9]\d{0,2}(,\d{3})+$|^[1-9]\d*$/.test(s)){$('qm').textContent='Invalid number (e.g. 250 or 1,000)';return}const c=+s.replace(/,/g,'');
-if(c*2>G.prot){$('qm').textContent='Need '+c*2+' Proteins (have '+G.prot+')';return}G.prot-=c*2;const r=c%1000;G.jobs.push({v,k,n:c,left:c,acc:0,t:0,dur:5*Math.max(1,Math.floor(c/1000)+(r>100?1:0))});q.style.display=$('vm').style.display='none'};
+if(c*2>G.prot){$('qm').textContent='Need '+c*2+' Proteins (have '+G.prot+')';return}G.prot-=c*2;const r=c%1000;G.f.buy=1;G.jobs.push({v,k,n:c,left:c,acc:0,t:0,dur:5*Math.max(1,Math.floor(c/1000)+(r>100?1:0))});q.style.display=$('vm').style.display='none'};
 $('qo').onclick=go;i.onkeydown=e=>{if(e.key=='Enter')go();e.stopPropagation()}}
 // ---------- input ----------
 const M={x:0,y:0,d:0,sx:0,sy:0,path:[]},K={};let pendingGroup=null;
@@ -179,7 +180,7 @@ onkeydown=e=>{if(e.target.tagName=='INPUT'&&e.target.type!='checkbox')return;con
 if(G&&G.st=='play'&&/^[1-9]$/.test(k)){
 if(e.ctrlKey){e.preventDefault();const sel=G.cells.filter(a=>!a.tm&&a.sel&&!a.dead);if(sel.length>20){const ex=G.ctrlGroups[k],exN=ex?[...ex.members].filter(m=>!m.dead).length:0;
 if(exN>0&&localStorage.getItem('phagoNoWarnGroup')!=='1'){pendingGroup={k,sel};showGroupWarn(k,exN)}else assignGroup(k,sel)}}
-else{const grp=G.ctrlGroups[k];if(grp){const mem=[...grp.members].filter(a=>!a.dead);if(mem.length){G.cells.forEach(a=>a.sel=0);mem.forEach(a=>a.sel=1);G.f.sel=1}}}}};
+else{const grp=G.ctrlGroups[k];if(grp){const mem=[...grp.members].filter(a=>!a.dead);if(mem.length){G.cells.forEach(a=>a.sel=0);mem.forEach(a=>a.sel=1);G.f.sel=1;G.f.gsel=1}}}}};
 onkeyup=e=>{K[e.key.toLowerCase()]=0};
 cv.onwheel=e=>{if(G)G.cam.z=Math.max(.3,Math.min(1.6,G.cam.z*(e.deltaY<0?1.1:.9)))};
 const mmGo=e=>{if(!G||!(e.buttons&1))return;const r=mm.getBoundingClientRect();G.cam.x=(e.clientX-r.left)/r.width*G.w;G.cam.y=(e.clientY-r.top)/r.height*G.h};mm.onpointerdown=mm.onpointermove=mmGo;
@@ -215,14 +216,29 @@ for(const p of g.camps)if(!p.dead&&(g.hl||isE(p.x,p.y))){mx.fillStyle='#ff5fa0';
 {const mm=F.mm||(F.mm=new Uint8Array(180*120)),PP=new Path2D(),PE=new Path2D();mm.fill(0);for(const a of g.cells){if(a.tm&&!g.hl&&!isV(a.x,a.y))continue;const px=Math.min(178,a.x*k|0),py=Math.min(118,a.y*k|0),q=py*180+px;if(mm[q])continue;mm[q]=1;(a.tm?PE:PP).rect(px,py,2,2)}mx.fillStyle='#6cf';mx.fill(PP);mx.fillStyle=g.hl?'#ffd23c':'#f55';mx.fill(PE)}
 mx.strokeStyle='#fff';mx.strokeRect((c.x-W/2/z)*k,(c.y-H/2/z)*k,W/z*k,H/z*k);
 if(g.fr%8==0)hud()}
+const TUT=[
+{t:'Look around',h:'Move the camera with WASD or the arrow keys (or push the mouse to a screen edge). Zoom with + and − or the mouse wheel.',d:f=>f.pan&&f.zm},
+{t:'Select cells',h:'Drag a loop around cells with the mouse (lasso), or press Q to select every cell. Esc clears the selection.',d:f=>f.sel},
+{t:'Move out',h:'Right-click the ground. Selected cells walk there and attack enemies they meet. A white dashed line shows their route.',d:f=>f.mv},
+{t:'Queue waypoints',h:'Hold Ctrl and click several points. Cells visit them in order, and the line links each point to the next.',d:f=>f.q},
+{t:'Explore the fog',h:'Dark areas are unexplored and hide enemies. Cells only see nearby. Scout right until you find the pink encampment on the minimap.',d:f=>f.fog},
+{t:'Open a vein',h:'Right-click a red vein. Hover over T-Cell or B-Cell to read their stats and abilities.',d:f=>f.vein},
+{t:'Summon cells',h:'Click a cell type, type an amount (the cost and your remaining Proteins show), then press Deliver. Each cell costs 2 Proteins.',d:f=>f.buy},
+{t:'Fight',h:'Destroy enemies. T-Cells expose hidden Mimics, B-Cells shred Bacteria. Kills give Proteins, and sometimes DNA. Cells that see an enemy alert their neighbours, so a whole chain of cells joins in.',d:f=>f.kill},
+{t:'Save a group',h:'Select 21 or more cells (Q) and press Ctrl+1 to save them as Group 1. Press Ctrl+1 again on an existing group to overwrite it.',d:f=>f.grp},
+{t:'Recall the group',h:'Press 1 to select Group 1 again. Groups use keys 1 to 9.',d:f=>f.gsel},
+{t:'Give group orders',h:'Use the group panel: pick a target and a priority from the dropdowns. The red ✕ deletes a group. Grouped cells only share sight with their own group.',d:f=>f.gset},
+{t:'Destroy the encampment',h:'It spawns Bacteria until it falls (100 hits). Wipe out every enemy to win. Winning opens the shop.',d:f=>0}];
 function hud(){const g=G;let tC=0,bC=0;for(const a of g.cells)if(!a.tm&&!a.dead){if(a.k=='T')tC++;else bC++}
 $('hud').innerHTML='Proteins <b>'+g.prot+'</b> · DNA <b>'+g.dna+'</b> · T-Cells <b>'+tC+'</b> · B-Cells <b>'+bC+'</b> · Total Cells <b>'+g.pc+'</b> · Enemies <b>'+g.ec+'</b> · '+['Easy','Medium','Hard'][diff]+' · '+(g.tut?'Tutorial':'Level '+lvl+' · Stage 1')+'<br><small>Lasso-drag: select · Q: all · Right-click: move (Ctrl+click: queue waypoints) · Right-click vein: summon · Ctrl+1-9: save group (20+ sel.) · 1-9: select group · WASD/wheel: camera</small>';
 const sig=Object.keys(g.ctrlGroups).map(k=>{const m=[...g.ctrlGroups[k].members].filter(a=>!a.dead).length;return k+':'+(m>0?1:0)+g.ctrlGroups[k].target+g.ctrlGroups[k].priority}).join('|');
 if(sig!==g.f.gpSig){g.f.gpSig=sig;let h='';for(const k in g.ctrlGroups){const grp=g.ctrlGroups[k],cnt=[...grp.members].filter(a=>!a.dead).length;if(!cnt)continue;
 h+='<div style="display:flex;gap:4px;align-items:flex-start"><div style="background:#2a1015;border:1px solid var(--ac);border-radius:6px;padding:4px 6px;margin-bottom:4px;font-size:11px">G'+k+' (<span id="gc'+k+'">'+cnt+'</span>) <select data-g="'+k+'" data-f="target"><option value="closest"'+(grp.target=='closest'?' selected':'')+'>Closest</option><option value="highest"'+(grp.target=='highest'?' selected':'')+'>Highest HP</option><option value="lowest"'+(grp.target=='lowest'?' selected':'')+'>Lowest HP</option></select> <select data-g="'+k+'" data-f="priority"><option value="enemy"'+(grp.priority=='enemy'?' selected':'')+'>Engage</option><option value="destination"'+(grp.priority=='destination'?' selected':'')+'>Destination</option></select></div><button data-x="'+k+'" style="padding:1px 6px;font-size:13px;color:#fff;background:#b01020;border-color:#ff4a5a">✕</button></div>'}
-$('gp').innerHTML=h;$('gp').querySelectorAll('select').forEach(s=>{s.onchange=()=>{g.ctrlGroups[s.dataset.g][s.dataset.f]=s.value}});$('gp').querySelectorAll('button[data-x]').forEach(b=>{b.onclick=()=>{const k=b.dataset.x;delete g.ctrlGroups[k];for(const a of g.cells)if(a.grp===k)a.grp=null}})}
+$('gp').innerHTML=h;$('gp').querySelectorAll('select').forEach(s=>{s.onchange=()=>{g.ctrlGroups[s.dataset.g][s.dataset.f]=s.value;g.f.gset=1}});$('gp').querySelectorAll('button[data-x]').forEach(b=>{b.onclick=()=>{const k=b.dataset.x;g.f.gset=1;delete g.ctrlGroups[k];for(const a of g.cells)if(a.grp===k)a.grp=null}})}
 for(const k in g.ctrlGroups){const e=$('gc'+k);if(e)e.textContent=[...g.ctrlGroups[k].members].filter(a=>!a.dead).length}const t=g.tut?$('tut'):null;
-const tt=$('tut');tt.style.display=g.tut?'block':'none';if(g.tut){const f=g.f,l=(d,s)=>(d?'✔ ':'☐ ')+s;tt.innerHTML=[l(f.sel,'Drag a box around cells (or press Q) to select'),l(f.mv,'Right-click ground: cells move and attack automatically'),l(f.vein,'Right-click the vein to summon cells (click a button for amount)'),l(f.kill,'Destroy enemies. T-Cells expose hidden Mimics, B-Cells shred Bacteria'),'☐ Destroy every cell and the encampment (100 hits)'].join('<br>')}}
+const tt=$('tut');tt.style.display=g.tut?'block':'none';if(g.tut){const f=g.f;if(!f.c0)f.c0={x:g.cam.x,y:g.cam.y,z:g.cam.z};if(Math.hypot(g.cam.x-f.c0.x,g.cam.y-f.c0.y)>120)f.pan=1;if(Math.abs(g.cam.z-f.c0.z)>.1)f.zm=1;if(Object.keys(g.ctrlGroups).length)f.grp=1;const cp=g.camps[0];if(cp&&isE(cp.x,cp.y))f.fog=1;
+let k=TUT.findIndex(s=>!s.d(f));if(k<0)k=TUT.length-1;
+tt.innerHTML='<b>Tutorial · step '+(k+1)+'/'+TUT.length+'</b><br>'+TUT.slice(Math.max(0,k-2),k).map(s=>'✔ '+s.t).join('<br>')+(k?'<br>':'')+'<b>☐ '+TUT[k].t+'</b><br><small>'+TUT[k].h+'</small>'}}
 function winDraw(){const g=G,t=g.wt||99;cx.setTransform(1,0,0,1,0,0);cx.fillStyle='#3a0d14';cx.fillRect(0,0,W,H);const py=u=>H/2+Math.sin(u*7)*H*.12;cx.lineCap='round';cx.strokeStyle='#7d1a2a';cx.lineWidth=70;cx.beginPath();
 for(let u=0;u<=1.001;u+=.02)u?cx.lineTo(60+u*(W-260),py(u)):cx.moveTo(60,py(0));cx.stroke();
 for(let i=0;i<250;i++){const u=Math.max(0,Math.min(1,t/4.5*1.3-i/250*.6));cx.fillStyle=i%2?'#5ee08a':'#4aa8ff';cx.beginPath();cx.arc(60+u*(W-260),py(u)+(i%7-3)*7,5,0,6.3);cx.fill()}
